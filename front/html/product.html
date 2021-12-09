@@ -47,7 +47,6 @@
         <section class="item">
           <article>
             <div class="item__img">
-              <!-- <img src="../images/logo.png" alt="Photographie d'un canapé"> -->
             </div>
             <div class="item__content">
 
@@ -66,8 +65,6 @@
                   <label for="color-select">Choisir une couleur :</label>
                   <select name="color-select" id="colors">
                       <option value="">--SVP, choisissez une couleur --</option>
-<!--                       <option value="vert">vert</option>
-                      <option value="blanc">blanc</option> -->
                   </select>
                 </div>
 
@@ -78,7 +75,7 @@
               </div>
 
               <div class="item__content__addButton">
-                <button id="addToCart">Ajouter au panier</button>
+                <button id="addToCart" onclick="add_to_cart('yo')";>Ajouter au panier</button>
               </div>
 
             </div>
@@ -110,6 +107,11 @@
         </div>
       </div>
     </footer>
-  <script src="../js/product.js"></script>
   </body>
+
+  <script type="text/javascript" src="../JS/Products.js"></script>
+  <script type="text/javascript">
+    asynccall_Create_product('http://localhost:3000/api/products');
+
+  </script>
 </html>

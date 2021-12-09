@@ -1,9 +1,12 @@
 const express = require('express');
 const path = require('path');
+const morgan = require('morgan')('dev')
 
 const productRoutes = require('./routes/product');
 
 const app = express();
+
+app.use(morgan)
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
