@@ -1,4 +1,19 @@
 // General
+const Create_HTML_elem = (Type,Attributes,InnerHTML,Parent) => {
+	let elem = document.createElement(Type)
+
+	for([key,val] of Object.entries(Attributes)){
+		elem.setAttribute(key,val)
+	}
+	if(InnerHTML!=undefined)
+		elem.innerHTML = InnerHTML
+
+	if (Parent)
+		Parent.appendChild(elem)
+	else
+		return elem
+}
+
 // Pull datas from API
 async function get_data(api_name){
 	return new Promise((next) => {
@@ -18,22 +33,12 @@ async function get_data(api_name){
 // ----- Index -----
 // Create Item from Kanap API
 function create_item_index(id,imgurl,altTxt,prod_name,prod_descript){
-	var new_item = document.createElement('a');
-	new_item.setAttribute('href', './product.html?id='+id)
-
+	let new_item = Create_HTML_elem('a',{'href':'./product.html?id='+id})
 	new_item.appendChild(document.createElement('article'))
 	
-	var image = document.createElement('img')
-	image.setAttribute('src', imgurl)
-	image.setAttribute('alt', altTxt)
-
-	var h3 = document.createElement('h3')
-	h3.classList.add('productName')
-	h3.innerHTML = prod_name
-
-	var para = document.createElement('p')
-	para.classList.add('productDescription')
-	para.innerHTML= prod_descript
+	let image = Create_HTML_elem('img',{'src':imgurl,'alt':altTxt})
+	let h3 = Create_HTML_elem('h3',{'class':'productName'},prod_name)
+	let para = Create_HTML_elem('p',{'class':'productDescription'},prod_descript)
 
 
 	new_item.children[0].appendChild(image)
@@ -55,11 +60,79 @@ async function asynccall_Create_item(api_name){
 	}
 }
 
-//asynccall_Create_item('http://localhost:3000/api/products')
+// ----- Individual Product menu -----
+class Item{
+	constructor(colors,id,name,price,imageURL,description,altTxt){
+		this.colors = colors
+		this.id = id
+		this.name = name
+		this.price = price
+		this.imageURL = imageURL
+		this.description = description
+		this.altTxt = altTxt
+	}
 
+	async get_item_info(idd,next){
+		let infos = await get_data('http://localhost:3000/api/products/' + idd)
+		for(let[key,value] of Object.entries(infos)){
+			switch(true){
+			case key.includes('colors'):
+				this.colors = value
+			case key.includes('id'):
+				this.id = value
+			case key.includes('name'):
+				this.name = value
+			case key.includes('price'):
+				this.price = value
+			case key.includes('imageURL'):
+				this.imageURL = value
+			case key.includes('description'):
+				this.description = value
+			case key.includes('altTxt'):
+				this.altTxt = value
+			}
+		}
+		next(this)
+	}
 
+	Create_item_menu(){
+		// Image
+			let div_img = document.getElementsByClassName('item__img')[0]
+			let new_img = Create_HTML_elem('img',{'src':this.imageURL,'alt':'Photographie d\'un canapé'})
+			div_img.appendChild(new_img)
 
-// ----- Product -----
+		// Name
+			let title_div = document.getElementById('title')
+			title_div.innerHTML = this.name
+
+		// Price
+			let price_div = document.getElementById('price')
+			price_div.innerHTML = this.price
+
+		// Description
+			let description_div = document.getElementById('description')
+			description_div.innerHTML = this.description
+
+		// Colors
+			let colors_div = document.getElementById('colors')
+
+		// Qty
+			let qty_input = document.getElementById('quantity')
+			qty_input.setAttribute('value',1)
+
+		for(let color of this.colors){
+			let new_color = document.createElement('option')
+			new_color.setAttribute('value',color)
+			new_color.innerHTML = color
+
+			colors_div.appendChild(new_color)
+		}
+	}
+}
+
+let tester = new Item()
+tester.get_item_info('034707184e8e4eefb46400b5a3774b5f',() =>{console.log(tester)})
+
 function get_param(param){ //Find URL Parameter
 	var kanap_string = window.location.href
 	var kanap = new URL(kanap_string)
@@ -67,55 +140,11 @@ function get_param(param){ //Find URL Parameter
 	
 	return parameter
 }
-//get_param('id')
-
-function Create_item_product(item){ // Fill specific div
-	var res = []
-	for(i in item){
-		//console.log(i + " " + item[i])
-		res.push([i,item[i]])
-	}
-
-	// Image
-		let div_img = document.getElementsByClassName('item__img')[0]
-		let new_img = document.createElement('img')
-		let link_img = res[4][1]
-
-		new_img.setAttribute('src',link_img)
-		new_img.setAttribute('alt','Photographie d\'un canapé')
-		div_img.appendChild(new_img)
-
-	// Name
-		let item_name = res[2][1]
-		let title_div = document.getElementById('title')
-		title_div.innerHTML = item_name
-
-	// Price
-		let item_price = res[3][1]
-		let price_div = document.getElementById('price')
-		price_div.innerHTML = item_price
-
-	// Description
-		let item_description = res[5][1]
-		let description_div = document.getElementById('description')
-		description_div.innerHTML = item_description
-
-	// Colors
-		let item_colors = res[0][1]
-		let colors_div = document.getElementById('colors')
-
-	for(color of item_colors){
-		let new_color = document.createElement('option')
-		new_color.setAttribute('value',color)
-		new_color.innerHTML = color
-
-		colors_div.appendChild(new_color)
-	}
-}
 
 async function asynccall_Create_product(api_name){ // Call : Fetch + fillDiv for product
 	let datas = await get_data(api_name + "/" + get_param('id'))
-	Create_item_product(datas);
+	let article_to_lay = new Item(datas.colors,datas._id,datas.name,datas.price,datas.imageUrl,datas.description,datas.altTxt)
+	article_to_lay.Create_item_menu()
 }
 
 //asynccall_Create_product('http://localhost:3000/api/products');
@@ -145,66 +174,65 @@ function check_product_added(color){
 	color != '' ? redirect = window.confirm('Votre produit ' + prod_name + ' de couleur ' + color.toLowerCase() + ' est ajouté à votre panier. Souhaitez vous retourner à la page d\'accueil ?'):
 	alert('N\'oubliez pas de choisir une couleur')
 	
-	redirect == true ? window.location.href= 'index.html': console.log('ok'); //Renvoie à l'accueil
+	if(redirect) 
+		window.location.href= 'index.html' //Renvoie à l'accueil
 }
 
 // ----- Cart ----
-function get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
-	var cart = window.sessionStorage;
-	var cart_ordered = []
-
-	for([key,value] of Object.entries(cart)){
-		let article = key + " " + value
-		let splited = article.split(' ')
-		cart_ordered.push(splited)
+class Cart{
+	constructor(cart){
+		this.cart = window.sessionStorage	
 	}
-	return cart_ordered
+
+	get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
+		var cart_ordered = []
+
+		for(let[key,value] of Object.entries(this.cart)){
+			let article = key + " " + value
+			let splited = article.split(' ')
+			cart_ordered.push(splited)
+		}
+		return cart_ordered
+	}
+
+	construct_cart(article){
+
+	}
 }
 
 async function show_cart(next){
-	var cart_ordered = get_cart()
-
-	for (elem of cart_ordered){
-		
+	let carto = new Cart
+	for (elem of carto.get_cart()){
 		//Elem infos
 			let elem_id = elem[0]
 			let elem_color = elem[1]
 			let elem_qty = elem[2]
-			let article_datas = await get_data('http://localhost:3000/api/products/' + elem_id)
-			let article_data_name = article_datas.name
-			let article_data_price = article_datas.price
-			let article_data_img = article_datas.imageUrl
+			let article_to_lay = await get_data('http://localhost:3000/api/products/' + elem_id)
+
+			let article_data_name = article_to_lay.name
+			let article_data_price = article_to_lay.price
+			let article_data_img = article_to_lay.imageUrl
 
 		//Article
-			var article = document.createElement('article')
-			article.classList.add('cart__item')
-			article.setAttribute('data-id', elem_id)
+			let article = Create_HTML_elem('article',{'class':'cart__item','data-id':elem_id})
 
 			//img
-			var div_img = document.createElement('div')
-			div_img.classList.add('cart__item__img')
-			var article_img = document.createElement('img')
-			article_img.setAttribute('src',article_data_img)
-			article_img.setAttribute('alt','Photographie d\'un canapé')
+			let div_img = Create_HTML_elem('div',{'class':'cart__item__img'})
+			let article_img = Create_HTML_elem('img',{'src':article_data_img,'alt':'Photographie d\'un canapé'})
+			
 			div_img.appendChild(article_img)
 			article.appendChild(div_img)
 
 			//--Content--
-			var div_content = document.createElement('div')
-			div_content.classList.add('cart__item__content')
+			let div_content = Create_HTML_elem('div',{'class':'cart__item__content'})
 		
 		//description
-			var div_content_description = document.createElement('div')
-			div_content_description.classList.add('cart__item__content__description')
-
+			let div_content_description = Create_HTML_elem('div',{'class':'cart__item__content__description'})
 			div_content.appendChild(div_content_description)
 
-			var h2_desc = document.createElement('h2')
-			h2_desc.innerHTML = article_data_name
-			var p1_desc = document.createElement('p')
-			p1_desc.innerHTML = elem_color
-			var p2_desc = document.createElement('p')
-			p2_desc.innerHTML = article_data_price + ',00 €'
+			let h2_desc = Create_HTML_elem('h2','',article_data_name)
+			let p1_desc = Create_HTML_elem('p','',elem_color)
+			let p2_desc = Create_HTML_elem('p','',article_data_price + ',00 €')
 
 			div_content_description.appendChild(h2_desc)
 			div_content_description.appendChild(p1_desc)
@@ -212,42 +240,33 @@ async function show_cart(next){
 
 
 		//settings
-			var div_content_setting = document.createElement('div')
-			div_content_setting.classList.add('cart__item__content__settings')
+			let div_content_setting = Create_HTML_elem('div',{'class':'cart__item__content__settings'})
 
 				//Qty
-					var div_content_setting__quantity = document.createElement('div')
-					div_content_setting__quantity.classList.add('cart__item__content__settings__quantity')
-					
-					var p1_desc_qty = document.createElement('p')
-					p1_desc_qty.innerHTML = 'Qté :'
+					let div_content_setting__quantity = Create_HTML_elem('div',{'class':'cart__item__content__settings__quantity'})
+					let p1_desc_qty = Create_HTML_elem('p','','Qté')
 					div_content_setting__quantity.appendChild(p1_desc_qty)
 
-					var input_desc_qty = document.createElement('input')
-					input_desc_qty.classList.add('itemQuantity')
-					input_desc_qty.setAttribute('type','number')
-					input_desc_qty.setAttribute('name','itemQuantity')
-					input_desc_qty.setAttribute('min','1')
-					input_desc_qty.setAttribute('max','100')
-					input_desc_qty.setAttribute('value',elem_qty)
-					div_content_setting__quantity.appendChild(input_desc_qty)
+					let input_desc_qty = Create_HTML_elem('input',{
+						'class':'itemQuantity',
+						'type' : 'number',
+						'name' : 'itemQuantity',
+						'min' : 1,
+						'max' : 100,
+						'value' : elem_qty
+					},'',div_content_setting__quantity)
 
 					div_content_setting.appendChild(div_content_setting__quantity)
 				
 				//Del
-					var div_content_settings_del = document.createElement('div')
-					div_content_settings_del.classList.add('cart__item__content__settings__delete')
-					var p_content_del = document.createElement('p')
-					p_content_del.classList.add('deleteItem')
-					p_content_del.innerHTML = 'Supprimer'
+					let div_content_settings_del = Create_HTML_elem('div',{'class':'cart__item__content__settings__delete'})
+					let p_content_del = Create_HTML_elem('p',{'class':'deleteItem'},'Supprimer')
 					p_content_del.addEventListener("click",(id,color)=>{
 						id = elem_id
 						color = elem_color
 						let clef = id + ' ' + color
 						sessionStorage.removeItem(clef)
 						window.location.href = ''
-
-
 					})
 
 					div_content_settings_del.appendChild(p_content_del)
@@ -290,9 +309,8 @@ function show_prices(){
 			item.appendChild( price_layer)
 
 
-			console.log(prices)
+			//console.log(prices)
 		} else{
-			//console.log('ciao')
 			break;
 		}
 		i++;
@@ -307,17 +325,14 @@ function show_total_price(prices_array){
 
 	for(elem of prices_array[0]){
 		total_price+=elem
-		console.log(total_price)
 	}
 
 	for(elem of prices_array[1]){
 		total_qty+=elem
-		console.log(total_qty)
 	}
 
 	let total_layer = document.getElementsByClassName('cart__price')[0].children[0]
 	total_layer.innerHTML = 'Total (' + total_qty +' articles) : ' + addCommas(total_price.toFixed(2) + ' €')
-
 }
 
 
@@ -332,3 +347,25 @@ function addCommas(nStr){
     }
     return x1 + x2;
 }
+
+
+(function link_init(){
+	switch(true){
+		case location.href.includes('cart.html'):
+			show_cart()
+			break
+
+		case location.href.includes('index.html'):
+			asynccall_Create_item('http://localhost:3000/api/products')
+			break
+
+		case location.href.includes('product.html'):
+			asynccall_Create_product('http://localhost:3000/api/products');
+			break
+	}
+})()
+
+
+
+
+
