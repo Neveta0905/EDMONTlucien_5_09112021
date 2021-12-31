@@ -1,4 +1,4 @@
-class Item {
+exports class Item {
 	constructor(id,imgurl,altTxt,prod_name,prod_descript){
 		this.id = id;
 		this.imgurl = imgurl;
@@ -12,4 +12,3 @@ class Item {
 	}
 }
 
-module.exports = Item

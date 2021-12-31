@@ -1,37 +1,6 @@
 // General
-const Create_HTML_elem = (Type,Attributes,InnerHTML,Parent) => {
-	let elem = document.createElement(Type)
-
-	for([key,val] of Object.entries(Attributes)){
-		elem.setAttribute(key,val)
-	}
-	if(InnerHTML!=undefined)
-		elem.innerHTML = InnerHTML
-
-	if (Parent)
-		Parent.appendChild(elem)
-	else
-		return elem
-}
-
-// Pull datas from API
-async function get_data(api_name){
-	return new Promise((next) => {
-		fetch(api_name)
-			.then(async (result) => {
-				next(result.json())
-			})
-
-			.then(async(data)=>{
-				return await data
-			})
-
-			.catch((err) => next(err))
-	})
-}
-
 // ----- Index -----
-// Create Item from Kanap API
+// Create Item in index page
 function create_item_index(id,imgurl,altTxt,prod_name,prod_descript){
 	let new_item = Create_HTML_elem('a',{'href':'./product.html?id='+id})
 	new_item.appendChild(document.createElement('article'))
@@ -51,14 +20,7 @@ function create_item_index(id,imgurl,altTxt,prod_name,prod_descript){
 	elem_in.insertBefore(new_item, elem_after);
 }
 
-// Use api (Pull datas and create Item)
-async function asynccall_Create_item(api_name){
-	let donnees = await get_data(api_name) // donnees est le retour de promesse
 
-	for(elem of donnees){
-		create_item_index(elem._id,elem.imageUrl,elem.altTxt,elem.name,elem.description)
-	}
-}
 
 // ----- Individual Product menu -----
 class Item{
@@ -70,32 +32,10 @@ class Item{
 		this.imageURL = imageURL
 		this.description = description
 		this.altTxt = altTxt
+		this.api = 'http://localhost:3000/api/products/'
 	}
 
-	async get_item_info(idd,next){
-		let infos = await get_data('http://localhost:3000/api/products/' + idd)
-		for(let[key,value] of Object.entries(infos)){
-			switch(true){
-			case key.includes('colors'):
-				this.colors = value
-			case key.includes('id'):
-				this.id = value
-			case key.includes('name'):
-				this.name = value
-			case key.includes('price'):
-				this.price = value
-			case key.includes('imageURL'):
-				this.imageURL = value
-			case key.includes('description'):
-				this.description = value
-			case key.includes('altTxt'):
-				this.altTxt = value
-			}
-		}
-		next(this)
-	}
-
-	Create_item_menu(){
+	Create_item_menu(){ // Indivual menu after index
 		// Image
 			let div_img = document.getElementsByClassName('item__img')[0]
 			let new_img = Create_HTML_elem('img',{'src':this.imageURL,'alt':'Photographie d\'un canapé'})
@@ -120,34 +60,100 @@ class Item{
 			let qty_input = document.getElementById('quantity')
 			qty_input.setAttribute('value',1)
 
-		for(let color of this.colors){
-			let new_color = document.createElement('option')
-			new_color.setAttribute('value',color)
-			new_color.innerHTML = color
+		if(this.colors){
+			for(let color of this.colors){
+				let new_color = document.createElement('option')
+				new_color.setAttribute('value',color)
+				new_color.innerHTML = color
 
-			colors_div.appendChild(new_color)
+				colors_div.appendChild(new_color)
+			}
 		}
+	}
+
+	getById(id){ // API use
+		return new Promise((next)=>{
+			fetch(this.api + id)
+				.then((response) => response.json())
+					.then(data => {
+						for(let[key,value] of Object.entries(data)){
+							switch (true) {
+								case key.includes('id'):
+									this.id = value;
+									break;
+
+								case key.includes('colors'):
+									this.colors = value;
+									break;
+
+								case key.includes('name'):
+									this.name = value;
+									break;
+
+								case key.includes('price'):
+									this.price = value;
+									break;
+
+								case key.includes('image'):
+									this.imageURL = value;
+									break;
+
+								case key.includes('description'):
+									this.description = value;
+									break;
+
+								case key.includes('altTxt'):
+									this.altTxt = value;
+									break;
+							}
+						}
+						next()
+					})
+				.catch( error => console.log(error.message))
+		})
+	}
+
+	static getAll(){ // API use
+		return new Promise((next)=>{
+			fetch('http://localhost:3000/api/products/')
+				.then((response) => response.json())
+					.then((data) => {
+						next(data)
+					})
+				.catch(error => console.log(error.message))
+		})
 	}
 }
 
-let tester = new Item()
-tester.get_item_info('034707184e8e4eefb46400b5a3774b5f',() =>{console.log(tester)})
-
-function get_param(param){ //Find URL Parameter
-	var kanap_string = window.location.href
-	var kanap = new URL(kanap_string)
-	var parameter = kanap.searchParams.get(param)
-	
-	return parameter
+// Create all items in index
+async function Create_items(api_name){
+	let donnees = await Item.getAll() // donnees est le retour de promesse
+	for(elem of donnees){
+		create_item_index(elem._id,elem.imageUrl,elem.altTxt,elem.name,elem.description)
+	}
 }
 
-async function asynccall_Create_product(api_name){ // Call : Fetch + fillDiv for product
-	let datas = await get_data(api_name + "/" + get_param('id'))
-	let article_to_lay = new Item(datas.colors,datas._id,datas.name,datas.price,datas.imageUrl,datas.description,datas.altTxt)
-	article_to_lay.Create_item_menu()
-}
+// ----- Cart ----
+class Cart{
+	constructor(cart){
+		this.cart = window.sessionStorage	
+	}
 
-//asynccall_Create_product('http://localhost:3000/api/products');
+	get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
+		let cart_ordered = []
+
+		for(let[key,value] of Object.entries(this.cart)){
+			let article = key + " " + value
+			let splited = article.split(' ')
+			cart_ordered.push(splited)
+		}
+		return cart_ordered
+	}
+
+	createArticle(article){
+		console.log(article)
+	}
+}
 
 function add_to_cart(){
 	let asked_color = document.getElementById('colors').value
@@ -178,28 +184,6 @@ function check_product_added(color){
 		window.location.href= 'index.html' //Renvoie à l'accueil
 }
 
-// ----- Cart ----
-class Cart{
-	constructor(cart){
-		this.cart = window.sessionStorage	
-	}
-
-	get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
-		var cart_ordered = []
-
-		for(let[key,value] of Object.entries(this.cart)){
-			let article = key + " " + value
-			let splited = article.split(' ')
-			cart_ordered.push(splited)
-		}
-		return cart_ordered
-	}
-
-	construct_cart(article){
-
-	}
-}
-
 async function show_cart(next){
 	let carto = new Cart
 	for (elem of carto.get_cart()){
@@ -212,6 +196,11 @@ async function show_cart(next){
 			let article_data_name = article_to_lay.name
 			let article_data_price = article_to_lay.price
 			let article_data_img = article_to_lay.imageUrl
+
+			/*let article_to_lay = new Item
+			article_to_lay.getById(elem_id).then(()=>{
+				createArticle(article_to_lay)
+			})*/
 
 		//Article
 			let article = Create_HTML_elem('article',{'class':'cart__item','data-id':elem_id})
@@ -335,6 +324,54 @@ function show_total_price(prices_array){
 	total_layer.innerHTML = 'Total (' + total_qty +' articles) : ' + addCommas(total_price.toFixed(2) + ' €')
 }
 
+// Init
+(function link_init(){
+	switch(true){
+		case location.href.includes('cart.html'):
+			show_cart()
+			break
+
+		case location.href.includes('index.html'):
+			Create_items('http://localhost:3000/api/products')
+			break
+
+		case location.href.includes('product.html'):
+			Create_product();
+			break
+	}
+})()
+
+// Launching functions
+function Create_product(){ // Create individual Item menu
+	let article_to_lay = new Item()
+	article_to_lay.getById(get_param('id')).then(()=>{
+		article_to_lay.Create_item_menu()
+	})
+}
+
+// Utils
+const Create_HTML_elem = (Type,Attributes,InnerHTML,Parent) => {
+	let elem = document.createElement(Type)
+
+	for([key,val] of Object.entries(Attributes)){
+		elem.setAttribute(key,val)
+	}
+	if(InnerHTML!=undefined)
+		elem.innerHTML = InnerHTML
+
+	if (Parent)
+		Parent.appendChild(elem)
+	else
+		return elem
+}
+
+function get_param(param){ //Find URL Parameter
+	var kanap_string = window.location.href
+	var kanap = new URL(kanap_string)
+	var parameter = kanap.searchParams.get(param)
+	
+	return parameter
+}
 
 function addCommas(nStr){
     nStr += '';
@@ -348,24 +385,19 @@ function addCommas(nStr){
     return x1 + x2;
 }
 
+// --------------------ICIiii-----
+// Pull datas from API
+async function get_data(api_name){
+	return new Promise((next) => {
+		fetch(api_name)
+			.then(async (result) => {
+				next(result.json())
+			})
 
-(function link_init(){
-	switch(true){
-		case location.href.includes('cart.html'):
-			show_cart()
-			break
+			.then(async(data)=>{
+				return await data
+			})
 
-		case location.href.includes('index.html'):
-			asynccall_Create_item('http://localhost:3000/api/products')
-			break
-
-		case location.href.includes('product.html'):
-			asynccall_Create_product('http://localhost:3000/api/products');
-			break
-	}
-})()
-
-
-
-
-
+			.catch((err) => next(err))
+	})
+}
