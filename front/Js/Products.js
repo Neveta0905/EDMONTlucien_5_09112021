@@ -123,91 +123,14 @@ class Item{
 				.catch(error => console.log(error.message))
 		})
 	}
-}
 
-// Create all items in index
-async function Create_items(api_name){
-	let donnees = await Item.getAll() // donnees est le retour de promesse
-	for(elem of donnees){
-		create_item_index(elem._id,elem.imageUrl,elem.altTxt,elem.name,elem.description)
-	}
-}
-
-// ----- Cart ----
-class Cart{
-	constructor(cart){
-		this.cart = window.sessionStorage	
-	}
-
-	get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
-		let cart_ordered = []
-
-		for(let[key,value] of Object.entries(this.cart)){
-			let article = key + " " + value
-			let splited = article.split(' ')
-			cart_ordered.push(splited)
-		}
-		return cart_ordered
-	}
-
-	createArticle(article){
-		console.log(article)
-	}
-}
-
-function add_to_cart(){
-	let asked_color = document.getElementById('colors').value
-	let product_id = get_param('id')
-
-	let color_name_key = product_id + ' ' + asked_color
-	let qty = document.getElementById('quantity').value
-	let qty_int = parseInt(qty)
-	let already_asked_qty = parseInt(sessionStorage.getItem(color_name_key))
-
-	check_product_added(asked_color)
-	if(qty > 0 && asked_color != ''){
-		sessionStorage.getItem(color_name_key) == null ?
-		sessionStorage.setItem(color_name_key,qty) :
-		sessionStorage.setItem(color_name_key,already_asked_qty + qty_int)
-		//console.log('produit ajouté')
-	}
-	//console.log('après,'+ color_name_key + ' :' + sessionStorage.getItem(color_name_key)) 
-}
-
-function check_product_added(color){
-	let prod_name = document.getElementById('title').innerHTML
-	let redirect
-	color != '' ? redirect = window.confirm('Votre produit ' + prod_name + ' de couleur ' + color.toLowerCase() + ' est ajouté à votre panier. Souhaitez vous retourner à la page d\'accueil ?'):
-	alert('N\'oubliez pas de choisir une couleur')
-	
-	if(redirect) 
-		window.location.href= 'index.html' //Renvoie à l'accueil
-}
-
-async function show_cart(next){
-	let carto = new Cart
-	for (elem of carto.get_cart()){
-		//Elem infos
-			let elem_id = elem[0]
-			let elem_color = elem[1]
-			let elem_qty = elem[2]
-			let article_to_lay = await get_data('http://localhost:3000/api/products/' + elem_id)
-
-			let article_data_name = article_to_lay.name
-			let article_data_price = article_to_lay.price
-			let article_data_img = article_to_lay.imageUrl
-
-			/*let article_to_lay = new Item
-			article_to_lay.getById(elem_id).then(()=>{
-				createArticle(article_to_lay)
-			})*/
-
+	Create_cart_article(id,color,qty){
 		//Article
-			let article = Create_HTML_elem('article',{'class':'cart__item','data-id':elem_id})
+			let article = Create_HTML_elem('article',{'class':'cart__item','data-id':id})
 
 			//img
 			let div_img = Create_HTML_elem('div',{'class':'cart__item__img'})
-			let article_img = Create_HTML_elem('img',{'src':article_data_img,'alt':'Photographie d\'un canapé'})
+			let article_img = Create_HTML_elem('img',{'src':this.imageURL,'alt':'Photographie d\'un canapé'})
 			
 			div_img.appendChild(article_img)
 			article.appendChild(div_img)
@@ -219,9 +142,9 @@ async function show_cart(next){
 			let div_content_description = Create_HTML_elem('div',{'class':'cart__item__content__description'})
 			div_content.appendChild(div_content_description)
 
-			let h2_desc = Create_HTML_elem('h2','',article_data_name)
-			let p1_desc = Create_HTML_elem('p','',elem_color)
-			let p2_desc = Create_HTML_elem('p','',article_data_price + ',00 €')
+			let h2_desc = Create_HTML_elem('h2','',this.name)
+			let p1_desc = Create_HTML_elem('p','',color)
+			let p2_desc = Create_HTML_elem('p','',this.price + ',00 €')
 
 			div_content_description.appendChild(h2_desc)
 			div_content_description.appendChild(p1_desc)
@@ -242,7 +165,7 @@ async function show_cart(next){
 						'name' : 'itemQuantity',
 						'min' : 1,
 						'max' : 100,
-						'value' : elem_qty
+						'value' : qty,
 					},'',div_content_setting__quantity)
 
 					div_content_setting.appendChild(div_content_setting__quantity)
@@ -250,33 +173,107 @@ async function show_cart(next){
 				//Del
 					let div_content_settings_del = Create_HTML_elem('div',{'class':'cart__item__content__settings__delete'})
 					let p_content_del = Create_HTML_elem('p',{'class':'deleteItem'},'Supprimer')
-					p_content_del.addEventListener("click",(id,color)=>{
-						id = elem_id
-						color = elem_color
-						let clef = id + ' ' + color
-						sessionStorage.removeItem(clef)
-						window.location.href = ''
-					})
+					p_content_del.addEventListener("click",()=>{Cart.remove_product(id,color)})
 
 					div_content_settings_del.appendChild(p_content_del)
 					div_content_setting.appendChild(div_content_settings_del)
 
-			div_content.appendChild(div_content_setting)
+					div_content.appendChild(div_content_setting)
 
 		//Body
 			article.appendChild(div_content)
 			var div_cart =document.getElementById('cart__items')
 			div_cart.appendChild(article)
-
 	}
-
-	show_total_price(show_prices(next))
 }
 
-function show_prices(){
+// Create all items in index
+async function Create_items(api_name){
+	let donnees = await Item.getAll() // donnees est le retour de promesse
+	for(elem of donnees){
+		create_item_index(elem._id,elem.imageUrl,elem.altTxt,elem.name,elem.description)
+	}
+}
+
+// ----- Cart ----
+class Cart{
+	static get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
+		let cart_ordered = []
+
+		for(let[key,value] of Object.entries(window.sessionStorage)){
+			let article = key + " " + value
+			let splited = article.split(' ')
+			cart_ordered.push(splited)
+		}
+		return cart_ordered
+	}
+
+	static add_product(){
+		let asked_color = document.getElementById('colors').value
+		let product_id = get_param('id')
+
+		let color_name_key = product_id + ' ' + asked_color
+		let qty = document.getElementById('quantity').value
+		let qty_int = parseInt(qty)
+		let already_asked_qty = parseInt(sessionStorage.getItem(color_name_key))
+
+		Cart.check_product_added(asked_color)
+		if(qty > 0 && asked_color != ''){
+			sessionStorage.getItem(color_name_key) == null ?
+			sessionStorage.setItem(color_name_key,qty) :
+			sessionStorage.setItem(color_name_key,already_asked_qty + qty_int)
+		}
+	}
+
+	static remove_product(id,color){
+		let clef = id + ' ' + color
+		sessionStorage.removeItem(clef)
+		window.location.href = ''
+	}
+
+	static check_product_added(color){
+		let prod_name = document.getElementById('title').innerHTML
+		let redirect
+		color != '' ? redirect = window.confirm('Votre produit ' + prod_name + ' de couleur ' + color.toLowerCase() + ' est ajouté à votre panier. Souhaitez vous retourner à la page d\'accueil ?'):
+		alert('N\'oubliez pas de choisir une couleur')
+		
+		if(redirect) 
+			window.location.href= 'index.html' //Renvoie à l'accueil
+	}
+
+	static getPrices(get_cart){
+		let prices_arr = []
+		for (elem of get_cart){
+			let product_id = elem[0]
+
+			let product = new Item
+			product.getById(product_id).then(() =>{
+				prices_arr.push(product.price)
+			})
+		}
+		return prices_arr;
+	}
+
+	static show(cart){
+		for (let elem of cart){
+		//Elem infos
+			let elem_id = elem[0]
+			let elem_color = elem[1]
+			let elem_qty = elem[2]
+
+			let article_to_lay = new Item
+			article_to_lay.getById(elem_id).then(()=>{
+				article_to_lay.Create_cart_article(elem_id,elem_color,elem_qty)				
+			}).then(()=>{show_article_price()})
+		}
+	}
+}
+
+function show_article_price(){
 	let zones_price = document.getElementsByClassName('cart__item__content')
-	var prices = []
-	var quantities = []
+	let prices = []
+	let quantities = []
+	let total_prices = []
 
 	let i = 0
 	for(elem in zones_price){
@@ -290,22 +287,19 @@ function show_prices(){
 			quantities.push(parseInt(item_qty))
 
 			let item_total_price = item_qty * item_price
-			prices.push(item_total_price)
+			total_prices.push(item_total_price)
 
 			item_total_price = addCommas(item_total_price.toFixed(2))
-			let price_layer = document.createElement('p')
-			price_layer.innerHTML = 'Total for this product = ' + item_total_price + ' €'
-			item.appendChild( price_layer)
-
-
-			//console.log(prices)
+			console.log(zones_price[i].getElementsByClassName('article_total_price'))
+			if(zones_price[i].getElementsByClassName('article_total_price') != undefined){
+				let price_layer = Create_HTML_elem('p',{'class':'article_total_price','style':'color:black;'},'Total price for these products : ' + item_total_price + " €")
+				item.appendChild(price_layer)
+			}
 		} else{
 			break;
 		}
 		i++;
 	}
-
-	return [prices,quantities]
 }
 
 function show_total_price(prices_array){
@@ -328,14 +322,16 @@ function show_total_price(prices_array){
 (function link_init(){
 	switch(true){
 		case location.href.includes('cart.html'):
-			show_cart()
+			Cart.show(Cart.get_cart())
 			break
 
 		case location.href.includes('index.html'):
-			Create_items('http://localhost:3000/api/products')
+			Create_items()
 			break
 
 		case location.href.includes('product.html'):
+			let button = document.getElementById('addToCart')
+			button.addEventListener('click',()=>{Cart.add_product()})
 			Create_product();
 			break
 	}
@@ -344,7 +340,7 @@ function show_total_price(prices_array){
 // Launching functions
 function Create_product(){ // Create individual Item menu
 	let article_to_lay = new Item()
-	article_to_lay.getById(get_param('id')).then(()=>{
+	article_to_lay.getById(get_param('id')).then(()=>{ // Fetch + lay
 		article_to_lay.Create_item_menu()
 	})
 }
@@ -353,6 +349,7 @@ function Create_product(){ // Create individual Item menu
 const Create_HTML_elem = (Type,Attributes,InnerHTML,Parent) => {
 	let elem = document.createElement(Type)
 
+	//Attributes must be {'attrib':'val'}
 	for([key,val] of Object.entries(Attributes)){
 		elem.setAttribute(key,val)
 	}
