@@ -180,6 +180,10 @@ class Item{
 
 					div_content.appendChild(div_content_setting)
 
+		// Total price
+			let price_layer = Create_HTML_elem('p',{'class':'article_total_price'},'Prix des produits : ' + addCommas(this.price * qty) + " €"
+				,div_content)
+
 		//Body
 			article.appendChild(div_content)
 			var div_cart =document.getElementById('cart__items')
@@ -243,15 +247,25 @@ class Cart{
 
 	static getPrices(get_cart){
 		let prices_arr = []
-		for (elem of get_cart){
+		for (let elem of get_cart){
 			let product_id = elem[0]
 
 			let product = new Item
 			product.getById(product_id).then(() =>{
 				prices_arr.push(product.price)
 			})
-		}
+			
+		}	
 		return prices_arr;
+	}
+
+	static getQties(get_cart){
+		let qty_arr = []
+
+		for(let elem of get_cart){
+			qty_arr.push(elem[2])
+		}
+		return qty_arr
 	}
 
 	static show(cart){
@@ -264,58 +278,13 @@ class Cart{
 			let article_to_lay = new Item
 			article_to_lay.getById(elem_id).then(()=>{
 				article_to_lay.Create_cart_article(elem_id,elem_color,elem_qty)				
-			}).then(()=>{show_article_price()})
+			})
 		}
 	}
-}
 
-function show_article_price(){
-	let zones_price = document.getElementsByClassName('cart__item__content')
-	let prices = []
-	let quantities = []
-	let total_prices = []
-
-	let i = 0
-	for(elem in zones_price){
-		if(zones_price[i] != undefined){
-			let item = zones_price[i]
-			let item_price = item.getElementsByClassName('cart__item__content__description')[0].children[2].innerHTML;
-			item_price = item_price.replace('€', '')
-			item_price = item_price.replace(',', '.')
-			
-			let item_qty = item.getElementsByClassName('itemQuantity')[0].value;
-			quantities.push(parseInt(item_qty))
-
-			let item_total_price = item_qty * item_price
-			total_prices.push(item_total_price)
-
-			item_total_price = addCommas(item_total_price.toFixed(2))
-			console.log(zones_price[i].getElementsByClassName('article_total_price'))
-			if(zones_price[i].getElementsByClassName('article_total_price') != undefined){
-				let price_layer = Create_HTML_elem('p',{'class':'article_total_price','style':'color:black;'},'Total price for these products : ' + item_total_price + " €")
-				item.appendChild(price_layer)
-			}
-		} else{
-			break;
-		}
-		i++;
+	static CalculateTotalPrice(arrayPrices,arrayQties){
+		
 	}
-}
-
-function show_total_price(prices_array){
-	var total_price = 0
-	var total_qty = 0
-
-	for(elem of prices_array[0]){
-		total_price+=elem
-	}
-
-	for(elem of prices_array[1]){
-		total_qty+=elem
-	}
-
-	let total_layer = document.getElementsByClassName('cart__price')[0].children[0]
-	total_layer.innerHTML = 'Total (' + total_qty +' articles) : ' + addCommas(total_price.toFixed(2) + ' €')
 }
 
 // Init
@@ -323,6 +292,8 @@ function show_total_price(prices_array){
 	switch(true){
 		case location.href.includes('cart.html'):
 			Cart.show(Cart.get_cart())
+			console.log(Cart.getQties(Cart.get_cart()))
+			Cart.getPrices(Cart.get_cart())
 			break
 
 		case location.href.includes('index.html'):
@@ -380,21 +351,4 @@ function addCommas(nStr){
         x1 = x1.replace(rgx, '$1' + ',' + '$2');
     }
     return x1 + x2;
-}
-
-// --------------------ICIiii-----
-// Pull datas from API
-async function get_data(api_name){
-	return new Promise((next) => {
-		fetch(api_name)
-			.then(async (result) => {
-				next(result.json())
-			})
-
-			.then(async(data)=>{
-				return await data
-			})
-
-			.catch((err) => next(err))
-	})
 }
