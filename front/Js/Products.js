@@ -106,11 +106,16 @@ class Item{
 									this.altTxt = value;
 									break;
 							}
+						next(data)
 						}
-						next()
 					})
 				.catch( error => console.log(error.message))
 		})
+	}
+
+	getPrice(id,next){
+		// obj.getPrice(id,(prix)=>{traitement prix})
+		this.getById(id).then((res)=>{next(res.price)})
 	}
 
 	static getAll(){ // API use
@@ -216,6 +221,7 @@ class Cart{
 		let asked_color = document.getElementById('colors').value
 		let product_id = get_param('id')
 
+		// Créer une clef couleur-id du produit
 		let color_name_key = product_id + ' ' + asked_color
 		let qty = document.getElementById('quantity').value
 		let qty_int = parseInt(qty)
@@ -245,20 +251,6 @@ class Cart{
 			window.location.href= 'index.html' //Renvoie à l'accueil
 	}
 
-	static getPrices(get_cart){
-		let prices_arr = []
-		for (let elem of get_cart){
-			let product_id = elem[0]
-
-			let product = new Item
-			product.getById(product_id).then(() =>{
-				prices_arr.push(product.price)
-			})
-			
-		}	
-		return prices_arr;
-	}
-
 	static getQties(get_cart){
 		let qty_arr = []
 
@@ -266,6 +258,31 @@ class Cart{
 			qty_arr.push(elem[2])
 		}
 		return qty_arr
+	}
+
+	static Totalqties(arr_qties){
+		let price =0
+		for(let elem of arr_qties){
+			price += parseInt(elem,10)
+		}
+		return price
+	}
+
+	static getPrices(get_cart){
+		return new Promise((next)=>{
+			let prices = []
+
+			for(let elem of get_cart){
+				let my_furniture = new Item
+				my_furniture.getPrice(elem[0],(price)=>{
+					prices.push(price)
+
+					if(get_cart.length === prices.length){
+						next(prices)
+					}
+				})
+			}
+		})
 	}
 
 	static show(cart){
@@ -282,18 +299,43 @@ class Cart{
 		}
 	}
 
-	static CalculateTotalPrice(arrayPrices,arrayQties){
-		
+	static CalculateTotalPrice(qty_arr,prices_arr){
+		let total_price=0
+		for(let i = 0;i<qty_arr.length;i++){
+			let total_prod_amount = parseInt(qty_arr[i], 10) * prices_arr[i]
+			total_price += total_prod_amount
+		}
+		return (total_price)
+	}
+
+	static lay_totals(total_price,total_qties){
+		let price_zone = document.getElementById('totalPrice')
+		let qty_zone = document.getElementById('totalQuantity')
+
+		price_zone.innerHTML = addCommas(total_price)
+		qty_zone.innerHTML = total_qties
 	}
 }
+
+
+const cart_caller = () =>{
+	Cart.getPrices(Cart.get_cart()).then((res_prices)=>{
+		let total_price = Cart.CalculateTotalPrice(Cart.getQties(Cart.get_cart()),res_prices)
+		let total_quantities = Cart.Totalqties(Cart.getQties(Cart.get_cart()))
+
+		Cart.lay_totals(total_price,total_quantities)
+	});
+}	
 
 // Init
 (function link_init(){
 	switch(true){
 		case location.href.includes('cart.html'):
 			Cart.show(Cart.get_cart())
-			console.log(Cart.getQties(Cart.get_cart()))
-			Cart.getPrices(Cart.get_cart())
+			// Get prices(get_cart) est une promise
+			// On ajoute un then qui permet le traitement des prices de la fonction
+			// Avec le paramètre en argument
+			cart_caller()
 			break
 
 		case location.href.includes('index.html'):
