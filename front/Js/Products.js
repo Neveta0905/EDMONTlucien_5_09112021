@@ -47,7 +47,7 @@ class Item{
 
 		// Price
 			let price_div = document.getElementById('price')
-			price_div.innerHTML = this.price
+			price_div.innerHTML = addCommas(this.price)
 
 		// Description
 			let description_div = document.getElementById('description')
@@ -260,6 +260,14 @@ class Cart{
 		return qty_arr
 	}
 
+	static Modify_qty(id,color,add_nbre){
+		let clef = id + ' ' + color
+		let curr_qty = sessionStorage.getItem(clef)
+
+		let new_qty = curr_qty + add_nbre
+		sessionStorage.setItem(clef,new_qty)
+	}
+
 	static Totalqties(arr_qties){
 		let price =0
 		for(let elem of arr_qties){
@@ -327,6 +335,16 @@ const cart_caller = () =>{
 	});
 }	
 
+const Event_qty_Modify = () => {
+	let qty_buttons = document.getElementsByClassName('itemQuantity')
+
+	for(let elem of qty_buttons){
+		console.log(elem)
+	}
+}
+
+Event_qty_Modify()
+
 // Init
 (function link_init(){
 	switch(true){
@@ -390,7 +408,7 @@ function addCommas(nStr){
     x2 = x.length > 1 ? '.' + x[1] : '';
     var rgx = /(\d+)(\d{3})/;
     while (rgx.test(x1)) {
-        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+        x1 = x1.replace(rgx, '$1' + '.' + '$2');
     }
     return x1 + x2;
 }
