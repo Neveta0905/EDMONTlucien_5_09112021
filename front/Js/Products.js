@@ -106,7 +106,7 @@ class Item{
 									this.altTxt = value;
 									break;
 							}
-						next(data)
+						next(this)
 						}
 					})
 				.catch( error => console.log(error.message))
@@ -172,6 +172,11 @@ class Item{
 						'max' : 100,
 						'value' : qty,
 					},'',div_content_setting__quantity)
+					input_desc_qty.addEventListener("change", 
+						() =>{
+							Cart.Modify_qty(id,color,input_desc_qty.value)
+							cart_price_caller()
+						})
 
 					div_content_setting.appendChild(div_content_setting__quantity)
 				
@@ -260,12 +265,23 @@ class Cart{
 		return qty_arr
 	}
 
-	static Modify_qty(id,color,add_nbre){
+	static Modify_qty(id,color,new_nbre){
 		let clef = id + ' ' + color
-		let curr_qty = sessionStorage.getItem(clef)
+		sessionStorage.setItem(clef,new_nbre)
+		
+		let cart_article = document.getElementsByClassName('cart__item__content')
 
-		let new_qty = curr_qty + add_nbre
-		sessionStorage.setItem(clef,new_qty)
+		for(let i=0;i<cart_article.length;i++){
+			let price = cart_article[i].getElementsByClassName('cart__item__content__description')[0].children[2].innerHTML
+			price = price.replace('€','')
+			price = price.replace(',','.')
+
+			let qty = cart_article[i].getElementsByClassName('itemQuantity')[0].value
+			
+
+			let price_layer = cart_article[i].getElementsByClassName('article_total_price')[0]
+			price_layer.innerHTML = 'Prix des produits : ' + addCommas(price * qty) + ' €';
+		}
 	}
 
 	static Totalqties(arr_qties){
@@ -300,10 +316,12 @@ class Cart{
 			let elem_color = elem[1]
 			let elem_qty = elem[2]
 
-			let article_to_lay = new Item
-			article_to_lay.getById(elem_id).then(()=>{
-				article_to_lay.Create_cart_article(elem_id,elem_color,elem_qty)				
-			})
+			let article = new Item;
+
+			(async function call_id(){
+				let article_to_lay = await article.getById(elem_id)
+				article_to_lay.Create_cart_article(elem_id,elem_color,elem_qty)
+			})()
 		}
 	}
 
@@ -325,35 +343,21 @@ class Cart{
 	}
 }
 
-
-const cart_caller = () =>{
-	Cart.getPrices(Cart.get_cart()).then((res_prices)=>{
-		let total_price = Cart.CalculateTotalPrice(Cart.getQties(Cart.get_cart()),res_prices)
-		let total_quantities = Cart.Totalqties(Cart.getQties(Cart.get_cart()))
-
-		Cart.lay_totals(total_price,total_quantities)
-	});
-}	
-
-const Event_qty_Modify = () => {
-	let qty_buttons = document.getElementsByClassName('itemQuantity')
-
-	for(let elem of qty_buttons){
-		console.log(elem)
-	}
+const cart_price_caller = async (next) =>{
+	let total_prices = await Cart.getPrices(Cart.get_cart())
+	let quantities = Cart.getQties(Cart.get_cart())
+	let total_price = Cart.CalculateTotalPrice(quantities,total_prices)
+	let total_quantities = Cart.Totalqties(Cart.getQties(Cart.get_cart()))
+	
+	Cart.lay_totals(total_price,total_quantities)
 }
-
-Event_qty_Modify()
 
 // Init
 (function link_init(){
 	switch(true){
 		case location.href.includes('cart.html'):
 			Cart.show(Cart.get_cart())
-			// Get prices(get_cart) est une promise
-			// On ajoute un then qui permet le traitement des prices de la fonction
-			// Avec le paramètre en argument
-			cart_caller()
+			cart_price_caller()
 			break
 
 		case location.href.includes('index.html'):
@@ -387,8 +391,10 @@ const Create_HTML_elem = (Type,Attributes,InnerHTML,Parent) => {
 	if(InnerHTML!=undefined)
 		elem.innerHTML = InnerHTML
 
-	if (Parent)
+	if (Parent){
 		Parent.appendChild(elem)
+		return elem
+	}
 	else
 		return elem
 }
