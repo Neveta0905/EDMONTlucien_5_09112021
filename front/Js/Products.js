@@ -321,7 +321,6 @@ class Contact{
 		this.email = email
 		this.string_rules = new Regexs
 		this.checkRules()
-		this.selfdestroy()
 	}
 
 	checkRules(){
@@ -346,6 +345,7 @@ class Contact{
 		if(pr === false || nm === false ||ad === false || vi === false || em === false){
 			this.selfdestroy()
 			//window.location.replace(window.location.href)
+			this.selfdestroy()
 			alert(error_mess)
 			error_mess=''
 		}
@@ -354,6 +354,27 @@ class Contact{
 	selfdestroy(){
 		for(let[key,value] of Object.entries(this)){
 			delete this[key]
+		}
+	}
+
+	submitEvent(){
+		let button = document.getElementById('order')
+		button.addEventListener("click",SubmitContactEvent)
+	}
+}
+
+
+const SubmitContactEvent = (event) => {
+ 	event.preventDefault()
+ 	const form = event.currentTarget.parentElement.parentElement
+ 	take_value(form)
+ }
+
+const take_value = (formulaire) =>{
+	for(let input of formulaire){
+		let obj = {}
+		if(input.name != '' || input.name != undefined){
+			
 		}
 	}
 }
@@ -370,7 +391,7 @@ class Regexs{
 
 
 let conta = new Contact('1lulu','edm','8 P Gd','Cassel','luluedfree.fr')
-console.log(conta)
+conta.submitEvent()
 
 // ----- Index -----
 // Create Item in index page
