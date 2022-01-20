@@ -320,7 +320,6 @@ class Contact{
 		this.ville = ville
 		this.email = email
 		this.string_rules = new Regexs
-		this.checkRules()
 	}
 
 	checkRules(){
@@ -343,11 +342,11 @@ class Contact{
 			error_mess = error_mess + 'Mail non conforme \n'
 
 		if(pr === false || nm === false ||ad === false || vi === false || em === false){
-			this.selfdestroy()
-			//window.location.replace(window.location.href)
-			this.selfdestroy()
 			alert(error_mess)
 			error_mess=''
+			this.selfdestroy()
+		} else {
+			alert('we can proceed the post !!')
 		}
 	}
 
@@ -356,42 +355,64 @@ class Contact{
 			delete this[key]
 		}
 	}
+}
 
-	submitEvent(){
+const submitEvent = () => {
 		let button = document.getElementById('order')
 		button.addEventListener("click",SubmitContactEvent)
 	}
-}
-
 
 const SubmitContactEvent = (event) => {
  	event.preventDefault()
  	const form = event.currentTarget.parentElement.parentElement
- 	take_value(form)
+ 	take_values(form)
  }
 
-const take_value = (formulaire) =>{
+const take_values = (formulaire) =>{
+	let obj = {}
 	for(let input of formulaire){
-		let obj = {}
 		if(input.name != '' || input.name != undefined){
-			
+			obj[input.name] = input.value
 		}
+
 	}
+	
+	let new_contact = new Contact()
+	for(let [key,value] of Object.entries(obj)){
+		switch(key){
+			case 'firstName' :
+				new_contact.prénom = value
+				break;
+			case 'lastName' :
+				new_contact.nom = value
+				break;
+			case 'address' :
+				new_contact.adresse = value
+				break;
+			case 'city' :
+				new_contact.ville = value
+				break;
+			case 'email' :
+				new_contact.email = value
+				break;
+			default :
+				break
+		}
+
+	}
+	new_contact.checkRules()
 }
 
 class Regexs{
 	constructor(prénom,nom,adresse,ville,email){
-		this.prénom = new RegExp("^[a-zA-Z._-]{3,50}")
-		this.nom = new RegExp("^[0-9a-zA-Z._-]{3,50}")
-		this.adresse = new RegExp("[0-9]*[a-zA-Z]*")
-		this.ville = new RegExp("[a-zA-Z]")
+		this.prénom = new RegExp("^[a-zA-Z._-]{2,50}$")
+		this.nom = new RegExp("^[a-zA-Z._-]{2,50}$")
+		this.adresse = new RegExp("^[0-9 ]+[a-zA-Z ]+$")
+		this.ville = new RegExp("^[a-zA-Z]{2,50}$")
 		this.email = new RegExp("[a-z0-9\-_]+[a-z0-9\.\-_]*@[a-z0-9\-_]{2,}\.[a-z\.\-_]+[a-z\-_]+")
 	}
 }
 
-
-let conta = new Contact('1lulu','edm','8 P Gd','Cassel','luluedfree.fr')
-conta.submitEvent()
 
 // ----- Index -----
 // Create Item in index page
@@ -438,6 +459,7 @@ const cart_price_caller = async (next) =>{
 		case location.href.includes('cart.html'):
 			Cart.show(Cart.get_cart())
 			cart_price_caller()
+			submitEvent()
 			break
 
 		case location.href.includes('index.html'):
