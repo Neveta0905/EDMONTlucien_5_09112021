@@ -31,6 +31,14 @@ class Cart{
 		}
 	}
 
+	static get_cart_ids(get_cart){
+		let prod_ids = []
+		for(let elem of get_cart){
+			prod_ids.push(elem[0])
+		}
+		return prod_ids
+	}
+
 	static remove_product(id,color){
 		let clef = id + ' ' + color
 		sessionStorage.removeItem(clef)
@@ -313,20 +321,20 @@ class Item{
 }
 
 class Contact{
-	constructor(prénom,nom,adresse,ville,email){
-		this.prénom = prénom
-		this.nom = nom
-		this.adresse = adresse
-		this.ville = ville
+	constructor(firstName,lastName,address,city,email){
+		this.firstName = firstName
+		this.lastName = lastName
+		this.address = address
+		this.city = city
 		this.email = email
 		this.string_rules = new Regexs
 	}
 
-	checkRules(){
-		let pr =  this.string_rules.prénom.test(this.prénom)
-		let nm = this.string_rules.nom.test(this.nom)
-		let ad = this.string_rules.adresse.test(this.adresse)
-		let vi = this.string_rules.ville.test(this.ville)
+	async checkRules(){
+		let pr =  this.string_rules.firstName.test(this.firstName)
+		let nm = this.string_rules.lastName.test(this.lastName)
+		let ad = this.string_rules.address.test(this.address)
+		let vi = this.string_rules.city.test(this.city)
 		let em = this.string_rules.email.test(this.email)
 		let error_mess= ''
 		
@@ -346,7 +354,8 @@ class Contact{
 			error_mess=''
 			this.selfdestroy()
 		} else {
-			alert('we can proceed the post !!')
+			let i = await send_command(this,Cart.get_cart_ids(Cart.get_cart()))
+			console.log(i)
 		}
 	}
 
@@ -355,11 +364,12 @@ class Contact{
 			delete this[key]
 		}
 	}
+
 }
 
 const submitEvent = () => {
-		let button = document.getElementById('order')
-		button.addEventListener("click",SubmitContactEvent)
+	let button = document.getElementById('order')
+	button.addEventListener("click",SubmitContactEvent)
 	}
 
 const SubmitContactEvent = (event) => {
@@ -368,29 +378,30 @@ const SubmitContactEvent = (event) => {
  	take_values(form)
  }
 
-const take_values = (formulaire) =>{
+// Take values make new instance of contact
+// It checks regex and calls api post
+const take_values = (formulaire) => {
 	let obj = {}
 	for(let input of formulaire){
 		if(input.name != '' || input.name != undefined){
 			obj[input.name] = input.value
 		}
-
 	}
 	
 	let new_contact = new Contact()
 	for(let [key,value] of Object.entries(obj)){
 		switch(key){
 			case 'firstName' :
-				new_contact.prénom = value
+				new_contact.firstName = value
 				break;
 			case 'lastName' :
-				new_contact.nom = value
+				new_contact.lastName = value
 				break;
 			case 'address' :
-				new_contact.adresse = value
+				new_contact.address = value
 				break;
 			case 'city' :
-				new_contact.ville = value
+				new_contact.city = value
 				break;
 			case 'email' :
 				new_contact.email = value
@@ -398,17 +409,44 @@ const take_values = (formulaire) =>{
 			default :
 				break
 		}
-
 	}
 	new_contact.checkRules()
 }
 
+
+const send_command= async (contact,products) => {
+	return new Promise((next)=>{
+		fetch('http://localhost:3000/api/products/order',{
+		  	method:"post",
+		  	headers: {
+		     	"Content-Type":"application/json" 
+		    },
+		  	body:JSON.stringify({
+	        	'contact':contact,
+	        	'products':products
+		    })
+		}).then((response)=>{next(response.json())})
+	})
+}
+
+//exemple of post
+/*
+"contact":{
+	'firstName':'li',
+	'lastName':'li',
+	'email':'li',
+	'address':'li@gmail.com',
+	'city':'li'
+},
+"products":['107fb5b75607497b96722bda5b504926','a6ec5b49bd164d7fbe10f37b6363f9fb']
+*/
+
 class Regexs{
-	constructor(prénom,nom,adresse,ville,email){
-		this.prénom = new RegExp("^[a-zA-Z._-]{2,50}$")
-		this.nom = new RegExp("^[a-zA-Z._-]{2,50}$")
-		this.adresse = new RegExp("^[0-9 ]+[a-zA-Z ]+$")
-		this.ville = new RegExp("^[a-zA-Z]{2,50}$")
+	constructor(firstName,lastName,address,city,email){
+		this.firstName = new RegExp("^[a-zA-Z._-]{2,50}$")
+		this.lastName = new RegExp("^[a-zA-Z._-]{2,50}$")
+		this.address = new RegExp("^[0-9 ]+[a-zA-Z ]+$")
+		this.city = new RegExp("^[a-zA-Z]{2,50}$")
 		this.email = new RegExp("[a-z0-9\-_]+[a-z0-9\.\-_]*@[a-z0-9\-_]{2,}\.[a-z\.\-_]+[a-z\-_]+")
 	}
 }
@@ -452,6 +490,7 @@ const cart_price_caller = async (next) =>{
 	
 	Cart.lay_totals(total_price,total_quantities)
 }
+
 
 // Init
 (function link_init(){
