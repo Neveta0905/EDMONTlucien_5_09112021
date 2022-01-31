@@ -451,7 +451,6 @@ class Regexs{
 	}
 }
 
-
 // ----- Index -----
 // Create Item in index page
 function create_item_index(id,imgurl,altTxt,prod_name,prod_descript){
