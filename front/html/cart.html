@@ -44,10 +44,31 @@
     
     <main class="limitedWidthBlockContainer">
       <div class="limitedWidthBlock" id="limitedWidthBlock">
+        
         <div class="cartAndFormContainer" id="cartAndFormContainer">
           <h1>Votre panier</h1>
           <section class="cart">
             <section id="cart__items">
+             <!--  <article class="cart__item">
+                <div class="cart__item__img">
+                  <img src="../images/product01.jpg" alt="Photographie d'un canapé">
+                </div>
+                <div class="cart__item__content">
+                  <div class="cart__item__content__titlePrice">
+                    <h2>Nom du produit</h2>
+                    <p>42,00 €</p>
+                  </div>
+                  <div class="cart__item__content__settings">
+                    <div class="cart__item__content__settings__quantity">
+                      <p>Qté : </p>
+                      <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="42">
+                    </div>
+                    <div class="cart__item__content__settings__delete">
+                      <p class="deleteItem" id="[item_Id]">Supprimer</p>
+                    </div>
+                  </div>
+                </div>
+              </article> -->
             </section>
             <div class="cart__price">
               <p>Total (<span id="totalQuantity"><!-- 2 --></span> articles) : <span id="totalPrice"><!-- 84,00 --></span> €</p>
@@ -55,29 +76,24 @@
             <div class="cart__order">
               <form method="get" class="cart__order__form">
                 <div class="cart__order__form__question">
-                  <label for="firstName">Prénom: </label>
+                  <label for="firstName">Entez votre prénom: </label>
                   <input type="text" name="firstName" id="firstName" required>
-                  <p id="firstNameErrorMsg"><!-- ci est un message d'erreur --></p>
                 </div>
                 <div class="cart__order__form__question">
-                  <label for="lastName">Nom: </label>
+                  <label for="lastName">Entez votre nom: </label>
                   <input type="text" name="lastName" id="lastName" required>
-                  <p id="lastNameErrorMsg"></p>
                 </div>
                 <div class="cart__order__form__question">
-                  <label for="address">Adresse: </label>
+                  <label for="address">Entez votre adresse: </label>
                   <input type="text" name="address" id="address" required>
-                  <p id="addressErrorMsg"></p>
                 </div>
                 <div class="cart__order__form__question">
-                  <label for="city">Ville: </label>
+                  <label for="city">Entez votre ville: </label>
                   <input type="text" name="city" id="city" required>
-                  <p id="cityErrorMsg"></p>
                 </div>
                 <div class="cart__order__form__question">
-                  <label for="email">Email: </label>
+                  <label for="email">Entez votre email: </label>
                   <input type="email" name="email" id="email" required>
-                  <p id="emailErrorMsg"></p>
                 </div>
                 <div class="cart__order__form__submit">
                   <input type="submit" value="Commander !" id="order">
@@ -86,6 +102,11 @@
             </div>
           </section>
         </div>
+
+<!--         <div class="confirmation">
+          <p>Commande validé ! <br>Votre numéro de commande est : <span id="orderId">65431343444684674</span></p>
+        </div> -->
+
       </div>
     </main>
     
@@ -112,6 +133,6 @@
         </div>
       </div>
     </footer>
-  <script src="../JS/Products.js"></script>
+  <script type="text/javascript" src="../js/cart.js"></script>
   </body>
 </html>
