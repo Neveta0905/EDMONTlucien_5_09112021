@@ -8,14 +8,13 @@ function get_products(){
 }
 
 function Create_article(product){
-  let article = `<a href="./product.html?${product._id}">`+'<article>'+`<img src="${product.imageUrl}" alt=${product.altTxt}>`+`<h3>${product.name}</h3>`
+  let article = `<a href="./product.html?id=${product._id}">`+'<article>'+`<img src="${product.imageUrl}" alt=${product.altTxt}>`+`<h3>${product.name}</h3>`
   +`<p>${product.description}</p>`+'</article>'
   return article
 }
 
 async function layprods(){
   const products = await get_products()
-  console.log(products)
   let items = document.getElementById('items')
 
   for(product of products){
