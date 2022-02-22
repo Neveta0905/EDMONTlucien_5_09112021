@@ -1,3 +1,4 @@
+// Page Layer
 layProduct()
 
 async function layProduct(){
@@ -5,7 +6,7 @@ async function layProduct(){
   fill_Html(product)
 }
 
-function getProductById(){
+function getProductById(){ // Fetch
   let id = get_param('id')
 
   return fetch('http://localhost:3000/api/products/'+id)
@@ -22,7 +23,7 @@ function get_param(param){ //Find URL Parameter
 }
 
 
-function get_Html(){
+function get_Html(){ // Give an object with all HTML object to modify
   let Html_oject = {}
   let HTML_modify = {
     classes:{image:'item__img',},
@@ -44,7 +45,7 @@ function get_Html(){
   return Html_oject
 }
 
-function fill_Html(product){
+function fill_Html(product){ // Specifiq HTML changer
   let zones = get_Html()
   zones.image.innerHTML=`<img src="${product.imageUrl}" alt="${product.altTxt}">`;
   zones.name.innerHTML=`${product.name}`;
@@ -53,9 +54,10 @@ function fill_Html(product){
   for(color of product.colors){
     zones.colors.innerHTML+=`<option value="${color}">${color}</option>`;
   }
-  console.log(zones.colors)
 }
+// -------------------
 
+// Util
 function addCommas(nStr){
     nStr += '';
     x = nStr.split('.');
@@ -67,13 +69,52 @@ function addCommas(nStr){
     }
     return x1 + x2;
 }
+// -------------------
 
+// Events
 (function handle_qtyCange(){
   let qty_changer = document.getElementById('quantity')
+  qty_changer.value=1
   qty_changer.addEventListener('change',()=>{
     if(qty_changer.value<0)
       qty_changer.value=1
     else if(qty_changer.value>100)
       qty_changer.value=100
   })
-})()
+})();
+
+(function coucou(){
+  let add_button = document.getElementById('addToCart')
+  add_button.addEventListener('click',()=>{Cart.addProduct(get_param('id'))})
+})();
+// -------------------
+
+class Cart{
+  static addProduct(id){
+    let asked_color = document.getElementById('colors').value
+
+    // Créer une clef couleur-id du produit
+    let color_name_key = id + ' ' + asked_color
+    let qty = parseInt(document.getElementById('quantity').value)
+    let already_asked_qty = parseInt(sessionStorage.getItem(color_name_key))
+
+    Cart.check_product_added(asked_color)
+    if(qty > 0 && asked_color != ''){
+      sessionStorage.getItem(color_name_key) == null ?
+      sessionStorage.setItem(color_name_key,qty) :
+      sessionStorage.setItem(color_name_key,already_asked_qty + qty)
+    }
+  }
+
+  static check_product_added(color){
+    let prod_name = document.getElementById('title').innerHTML
+    let redirect
+    color != '' ? redirect = window.confirm('Votre produit ' + prod_name + ' de couleur ' + color.toLowerCase() + ' est ajouté à votre panier. Souhaitez vous retourner à la page d\'accueil ?'):
+    alert('N\'oubliez pas de choisir une couleur')
+    
+    if(redirect) 
+      window.location.href= 'index.html' //Renvoie à l'accueil
+  }
+}
+
+// -------------------
