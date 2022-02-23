@@ -15,6 +15,7 @@ function Create_article(product){
 
 async function layprods(){
   const products = await get_products()
+  console.log(products)
   let items = document.getElementById('items')
 
   for(product of products){

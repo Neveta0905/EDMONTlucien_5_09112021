@@ -83,7 +83,7 @@ function addCommas(nStr){
   })
 })();
 
-(function coucou(){
+(function handle_add(){
   let add_button = document.getElementById('addToCart')
   add_button.addEventListener('click',()=>{Cart.addProduct(get_param('id'))})
 })();
