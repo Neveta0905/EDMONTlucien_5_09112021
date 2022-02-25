@@ -71,19 +71,27 @@ class Contact{ // Manage contact form
 		let error_mess= ''
 		
 		if(!pr)
-			error_mess = error_mess + 'Prénom non conforme \n'
+			alert_error('firstName','Prénom')
+		else
+			remove_error('firstName')
 		if(!nm)
-			error_mess = error_mess + 'Nom non conforme \n'
+			alert_error('lastName','Nom')
+		else
+			remove_error('lastName')
 		if(!ad)
-			error_mess = error_mess + 'Adresse non conforme \n'
+			alert_error('address','Adresse')
+		else
+			remove_error('address')
 		if(!vi)
-			error_mess = error_mess + 'Ville non conforme \n'
+			alert_error('city','Ville')
+		else
+			remove_error('city')
 		if(!em)
-			error_mess = error_mess + 'Mail non conforme \n'
+			alert_error('email','Mail')
+		else
+			remove_error('email')
 
 		if(pr === false || nm === false ||ad === false || vi === false || em === false){
-			alert(error_mess)
-			error_mess=''
 			this.selfdestroy()
 		} else {
 			let commmand_id = await send_command(this,Cart.get_cart_ids())
@@ -280,6 +288,20 @@ function lay_command(){ // Lay command in confirmation.html
 	let layer = document.getElementById('orderId')
 	let order_id = get_param('OrderId')
 	layer.innerHTML = order_id
+}
+
+function alert_error(id,property){ // Lay error if not already layed 
+	if(!document.getElementById('error_'+ id)){
+		let layer = document.getElementById(id).parentElement
+		layer.innerHTML += '<p style=\'color:orange\' id=\'error_'+id +'\'>' + property + ' invalide</p>'
+	}
+}
+
+function remove_error(id){
+	let elem = document.getElementById('error_' + id)
+	if(elem){
+		elem.remove()
+	}
 }
 
 // -------------------------------------
