@@ -1,12 +1,12 @@
 // Page Layer
 layProduct()
 
-async function layProduct(){
+async function layProduct(){ // Call function to get info and lay it
   const product = await getProductById()
   fill_Html(product)
 }
 
-function getProductById(){ // Fetch
+function getProductById(){ // Fetch thanks to url parameter
   let id = get_param('id')
 
   return fetch('http://localhost:3000/api/products/'+id)
@@ -45,7 +45,7 @@ function get_Html(){ // Give an object with all HTML object to modify
   return Html_oject
 }
 
-function fill_Html(product){ // Specifiq HTML changer
+function fill_Html(product){ // use HTML object to change inner HTML of all elements
   let zones = get_Html()
   zones.image.innerHTML=`<img src="${product.imageUrl}" alt="${product.altTxt}">`;
   zones.name.innerHTML=`${product.name}`;
@@ -58,7 +58,7 @@ function fill_Html(product){ // Specifiq HTML changer
 // -------------------
 
 // Util
-function addCommas(nStr){
+function addCommas(nStr){ // Add separator dots to price
     nStr += '';
     x = nStr.split('.');
     x1 = x[0];
@@ -72,7 +72,7 @@ function addCommas(nStr){
 // -------------------
 
 // Events
-(function handle_qtyCange(){
+(function handle_qtyCange(){ // Assure that quantity isn't wrong
   let qty_changer = document.getElementById('quantity')
   qty_changer.value=1
   qty_changer.addEventListener('change',()=>{
@@ -83,14 +83,14 @@ function addCommas(nStr){
   })
 })();
 
-(function handle_add(){
+(function handle_add(){ // Add event to submit button
   let add_button = document.getElementById('addToCart')
   add_button.addEventListener('click',()=>{Cart.addProduct(get_param('id'))})
 })();
 // -------------------
 
 class Cart{
-  static addProduct(id){
+  static addProduct(id){ // Add product in cart
     let asked_color = document.getElementById('colors').value
 
     // Créer une clef couleur-id du produit
@@ -106,7 +106,7 @@ class Cart{
     }
   }
 
-  static check_product_added(color){
+  static check_product_added(color){ // Alert user that product will be in the cart
     let prod_name = document.getElementById('title').innerHTML
     let redirect
     color != '' ? redirect = window.confirm('Votre produit ' + prod_name + ' de couleur ' + color.toLowerCase() + ' est ajouté à votre panier. Souhaitez vous retourner à la page d\'accueil ?'):
