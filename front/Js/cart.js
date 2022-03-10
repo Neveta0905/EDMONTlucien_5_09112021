@@ -16,7 +16,9 @@ class Cart{ // Manage cart
 		let cart = Cart.get_cart()
 		let prod_ids = []
 		for(let i = 0;i<cart.length;i++){
-			prod_ids.push(cart[i][0])
+			for(let y = 0;y<cart[i][2];y++){
+				prod_ids.push(cart[i][0])
+			}
 		}
 		return prod_ids
 	}
@@ -49,6 +51,10 @@ class Cart{ // Manage cart
 
 	static change_qty(coord,new_qty){ // Change quantity with index and a new quentity
 		sessionStorage.setItem(sessionStorage.key(coord),new_qty)
+	}
+
+	static clear(){
+		sessionStorage.clear()
 	}
 }
 
@@ -95,6 +101,7 @@ class Contact{ // Manage contact form
 			this.selfdestroy()
 		} else {
 			let commmand_id = await send_command(this,Cart.get_cart_ids())
+			Cart.clear()
 			set_param("OrderId",commmand_id.orderId)
 		}
 	}
@@ -297,7 +304,7 @@ function alert_error(id,property){ // Lay error if not already layed
 	}
 }
 
-function remove_error(id){
+function remove_error(id){ // Remoove error message
 	let elem = document.getElementById('error_' + id)
 	if(elem){
 		elem.remove()
