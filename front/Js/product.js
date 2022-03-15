@@ -1,6 +1,7 @@
 // Page Layer
 layProduct()
 
+
 async function layProduct(){ // Call function to get info and lay it
   const product = await getProductById()
   fill_Html(product)
@@ -96,13 +97,13 @@ class Cart{
     // Créer une clef couleur-id du produit
     let color_name_key = id + ' ' + asked_color
     let qty = parseInt(document.getElementById('quantity').value)
-    let already_asked_qty = parseInt(sessionStorage.getItem(color_name_key))
+    let already_asked_qty = parseInt(localStorage.getItem(color_name_key))
 
     Cart.check_product_added(asked_color)
     if(qty > 0 && asked_color != ''){
-      sessionStorage.getItem(color_name_key) == null ?
-      sessionStorage.setItem(color_name_key,qty) :
-      sessionStorage.setItem(color_name_key,already_asked_qty + qty)
+      localStorage.getItem(color_name_key) == null ?
+      localStorage.setItem(color_name_key,qty) :
+      localStorage.setItem(color_name_key,already_asked_qty + qty)
     }
   }
 

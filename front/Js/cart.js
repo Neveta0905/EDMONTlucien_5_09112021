@@ -4,7 +4,7 @@ class Cart{ // Manage cart
 	static get_cart(){ // return array[ [id,color,qty], [id2,color2,qty2] ]
 		let cart_ordered = []
 
-		for(let[key,value] of Object.entries(window.sessionStorage)){
+		for(let[key,value] of Object.entries(localStorage)){
 			let article = key + " " + value
 			let splited = article.split(' ')
 			cart_ordered.push(splited)
@@ -24,7 +24,7 @@ class Cart{ // Manage cart
 	}
 
 	static remove_product(key){ // Remoove id with index
-		sessionStorage.removeItem(sessionStorage.key(key))
+		localStorage.removeItem(localStorage.key(key))
 		window.location.href = ''
 	}
 
@@ -50,11 +50,11 @@ class Cart{ // Manage cart
 	}
 
 	static change_qty(coord,new_qty){ // Change quantity with index and a new quentity
-		sessionStorage.setItem(sessionStorage.key(coord),new_qty)
+		localStorage.setItem(localStorage.key(coord),new_qty)
 	}
 
 	static clear(){
-		sessionStorage.clear()
+		localStorage.clear()
 	}
 }
 
@@ -69,40 +69,29 @@ class Contact{ // Manage contact form
 	}
 
 	async checkRules(){ // Launch regex checking and if success send command
-		let pr =  this.string_rules.firstName.test(this.firstName)
-		let nm = this.string_rules.lastName.test(this.lastName)
-		let ad = this.string_rules.address.test(this.address)
-		let vi = this.string_rules.city.test(this.city)
-		let em = this.string_rules.email.test(this.email)
-		let error_mess= ''
-		
-		if(!pr)
-			alert_error('firstName','Prénom')
-		else
-			remove_error('firstName')
-		if(!nm)
-			alert_error('lastName','Nom')
-		else
-			remove_error('lastName')
-		if(!ad)
-			alert_error('address','Adresse')
-		else
-			remove_error('address')
-		if(!vi)
-			alert_error('city','Ville')
-		else
-			remove_error('city')
-		if(!em)
-			alert_error('email','Mail')
-		else
-			remove_error('email')
+		if(!Cart.get_cart_ids().length > 0)
+			alert('Panier vide')
+		else{
+			let pr =  this.string_rules.firstName.test(this.firstName)
+			let nm = this.string_rules.lastName.test(this.lastName)
+			let ad = this.string_rules.address.test(this.address)
+			let vi = this.string_rules.city.test(this.city)
+			let em = this.string_rules.email.test(this.email)
+			let error_mess= ''
+			
+			!pr ? alert_error('firstName','Prénom') :	remove_error('firstName')
+			!nm ?	alert_error('lastName','Nom') :	remove_error('lastName')
+			!ad ? alert_error('address','Adresse') : remove_error('address')
+			!vi ?	alert_error('city','Ville') :	remove_error('city')
+			!em ?	alert_error('email','Mail') : remove_error('email')
 
-		if(pr === false || nm === false ||ad === false || vi === false || em === false){
-			this.selfdestroy()
-		} else {
-			let commmand_id = await send_command(this,Cart.get_cart_ids())
-			Cart.clear()
-			set_param("OrderId",commmand_id.orderId)
+			if(pr === false || nm === false ||ad === false || vi === false || em === false){
+				this.selfdestroy()
+			} else {
+				let commmand_id = await send_command(this,Cart.get_cart_ids())
+				Cart.clear()
+				set_param("OrderId",commmand_id.orderId)
+			}
 		}
 	}
 
